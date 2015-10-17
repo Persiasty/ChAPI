@@ -1,7 +1,6 @@
 package pl.com.knopers.chapi.chatango;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -103,7 +102,6 @@ public class ChatangoRoom extends EngineWS implements Receiver
 	@Override
 	public void OnReceived(String cmd, String ... arg)
 	{	
-		//System.out.println(cmd + ": " + Arrays.toString(arg));
 		switch(cmd)
 		{
 			case "ok":
@@ -200,7 +198,7 @@ public class ChatangoRoom extends EngineWS implements Receiver
 				System.out.println("Flood Ban Repeat Get");
 				break;
 			default:
-				System.out.println(String.format("Unknown command [%s] : %s", cmd, Arrays.toString(arg)));			
+				kickListeners(cmd, arg);			
 				break;
 		}
 	}
@@ -222,8 +220,13 @@ public class ChatangoRoom extends EngineWS implements Receiver
 	}
 	private void kickListeners(RoomMessage msg)
 	{
-		for (MessageListener listener : _msgListeners)
+		for(MessageListener listener : _msgListeners)
 			listener.onMessage(msg);
+	}
+	private void kickListeners(String cmd, String ... args)
+	{
+		for(MessageListener listener : _msgListeners)
+			listener.onUnknown(cmd, args);
 	}
 	
 	//Join Listener
@@ -241,12 +244,12 @@ public class ChatangoRoom extends EngineWS implements Receiver
 	{
 		if(join)
 		{
-			for (JoinListener listener : _jListeners)
+			for(JoinListener listener : _jListeners)
 				listener.onJoin(user);
 		}
 		else
 		{
-			for (JoinListener listener : _jListeners)
+			for(JoinListener listener : _jListeners)
 				listener.onLeave(user);
 		}	
 	}
@@ -264,7 +267,7 @@ public class ChatangoRoom extends EngineWS implements Receiver
 	}
 	private void kickListeners(short count)
 	{
-		for (UsersCounter listener : _cListeners)
+		for(UsersCounter listener : _cListeners)
 			listener.onUsersCountChange(count);
 	}
 	
@@ -277,5 +280,9 @@ public class ChatangoRoom extends EngineWS implements Receiver
 	public Optional<ChatangoUser> getUserForName(String name)
 	{
 		return _userList.stream().filter(u -> u.getName().equalsIgnoreCase(name)).findFirst();
+	}
+	public List<ChatangoUser> getUsersList()
+	{
+		return _userList;
 	}
 }
