@@ -57,6 +57,7 @@ public class ChatangoRoom extends EngineWS implements Receiver
 		_uc = uc;
 		addListener(this);
 		_messageHistory = new HashSet<>();
+		_userList = new ArrayList<>();
 		
 		_msgListeners = new ArrayList<>();
 		_jListeners = new ArrayList<>();
