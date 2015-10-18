@@ -1,8 +1,25 @@
 package pl.com.knopers.chapi.chatango;
 
+import java.io.IOException;
 import java.math.BigInteger;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import pl.com.knopers.chapi.chatango.model.UserProfileInfo;
+import pl.com.knopers.chapi.chatango.model.UserProfileInfo.Gender;
 
 public class ChatangoSupport
 {
@@ -123,7 +140,49 @@ public class ChatangoSupport
 			sb.append(String.valueOf(Integer.parseInt(String.valueOf(nTag.charAt(i))) + Integer.parseInt(String.valueOf(ssid.charAt(i)))));
 		return sb.toString();
 	}
-	
+	public static UserProfileInfo getUserProfileInfo(String name) throws SAXException, IOException, ParserConfigurationException, ParseException
+	{
+		name = name.toLowerCase();
+		String addr = String.format("http://ust.chatango.com/profileimg/%c/%c/%s/mod1.xml", name.charAt(0), name.charAt(1), name);
+		
+		URL url = new URL(addr);
+		
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(url.openStream());
+		NodeList cn = doc.getFirstChild().getChildNodes();
+		UserProfileInfo info = new UserProfileInfo();
+		for(int i = 0; i < cn.getLength(); i++)
+		{
+			Node n = cn.item(i);
+			switch(n.getNodeName())
+			{
+				case "body":
+					info.Description = URLDecoder.decode(n.getNodeValue(), "UTF-8");
+					break;
+				case "b":
+					String date = n.getNodeValue();
+					if(date == null || date.isEmpty())
+						break;
+					
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+					Calendar c = Calendar.getInstance();
+					c.setTime(sdf.parse(date)); 
+					info.Age = Calendar.getInstance().get(Calendar.YEAR) - c.get(Calendar.YEAR);
+					break;
+				case "l":
+					info.Location = URLDecoder.decode(n.getNodeValue(), "UTF-8");
+					break;
+				case "s":
+					String g = n.getNodeValue();
+					info.Gender = g.equalsIgnoreCase("M") ? Gender.Male : 
+									g.equalsIgnoreCase("F") ? Gender.Female : null;
+					break;
+				case "t":
+					info.About = URLDecoder.decode(n.getNodeValue(), "UTF-8");
+					break;
+			}
+		}
+		return info;
+	}
 	public static String concatArray(String delimiter, int offset, String ... args)
 	{
 		StringBuffer sb = new StringBuffer();

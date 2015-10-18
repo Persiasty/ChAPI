@@ -133,7 +133,7 @@ public class ChatangoRoom extends EngineWS implements Receiver
 			case "g_participants":
 				int counter = 0;
 				long uid = -1L;
-				_userList = new ArrayList<>();
+				_userList.clear();
 				for(String token : arg)
 				{
 					if(token.startsWith(";"))
